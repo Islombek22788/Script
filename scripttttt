@@ -1,0 +1,246 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local ADMIN_NAME = "Houav4" -- Ваш ник
+
+-- Создаем ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ModMenuGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Плавная анимация появления
+local function animateIn(frame)
+	frame.ScaleType = Enum.ScaleType.Slice
+	frame.Position = UDim2.new(0.5, 0, 1.5, 0)
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	
+	local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	local goal = {Position = UDim2.new(0.5, 0, 0.5, 0)}
+	local tween = TweenService:Create(frame, tweenInfo, goal)
+	tween:Play()
+end
+
+-- РЕЖИМ ОБЫЧНОГО ИГРОКА
+if LocalPlayer.Name ~= ADMIN_NAME then
+	local userFrame = Instance.new("Frame")
+	userFrame.Size = UDim2.new(0, 320, 0, 120)
+	userFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+	userFrame.BorderSizePixel = 0
+	userFrame.Parent = screenGui
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = userFrame
+	
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(255, 170, 0)
+	stroke.Thickness = 2
+	stroke.Parent = userFrame
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -20, 1, -20)
+	label.Position = UDim2.new(0, 10, 0, 10)
+	label.BackgroundTransparency = 1
+	label.Text = "Скрипт активирован ждите модератора !"
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextScaled = true
+	label.Font = Enum.Font.GothamBold
+	label.Parent = userFrame
+	
+	animateIn(userFrame)
+	return
+end
+
+-- РЕЖИМ СОЗДАТЕЛЯ / МОДЕРАТОРА (Houav4)
+local selectedPlayer = nil
+local isMinimized = false
+
+-- Главная панель админа
+local adminFrame = Instance.new("Frame")
+adminFrame.Size = UDim2.new(0, 300, 0, 350)
+adminFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+adminFrame.BorderSizePixel = 0
+adminFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 14)
+corner.Parent = adminFrame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 45)
+title.BackgroundTransparency = 1
+title.Text = "Панель Ведущего"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 20
+title.Font = Enum.Font.GothamBold
+title.Parent = adminFrame
+
+-- Кнопка сворачивания (-)
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+minimizeBtn.Position = UDim2.new(1, -35, 0, 8)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 18
+minimizeBtn.Parent = adminFrame
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimizeBtn
+
+-- Метка выбранного игрока
+local targetLabel = Instance.new("TextLabel")
+targetLabel.Size = UDim2.new(1, -20, 0, 30)
+targetLabel.Position = UDim2.new(0, 10, 0, 45)
+targetLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 42)
+targetLabel.Text = "Цель: Не выбран"
+targetLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+targetLabel.TextSize = 14
+targetLabel.Font = Enum.Font.Gotham
+targetLabel.Parent = adminFrame
+local targetCorner = Instance.new("UICorner")
+targetCorner.CornerRadius = UDim.new(0, 6)
+targetCorner.Parent = targetLabel
+
+-- Контейнер для списка игроков
+local playerListFrame = Instance.new("ScrollingFrame")
+playerListFrame.Size = UDim2.new(1, -20, 0, 140)
+playerListFrame.Position = UDim2.new(0, 10, 0, 85)
+playerListFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+playerListFrame.BorderSizePixel = 0
+playerListFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+playerListFrame.Parent = adminFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 5)
+listLayout.Parent = playerListFrame
+
+-- Функция обновления списка игроков
+local function updatePlayerList()
+	for _, child in pairs(playerListFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer then
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(1, -10, 0, 30)
+			btn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+			btn.Text = plr.Name
+			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			btn.Font = Enum.Font.GothamSemibold
+			btn.TextSize = 14
+			btn.Parent = playerListFrame
+			
+			local btnCorner = Instance.new("UICorner")
+			btnCorner.CornerRadius = UDim.new(0, 6)
+			btnCorner.Parent = btn
+			
+			btn.MouseButton1Click:Connect(function()
+				selectedPlayer = plr
+				targetLabel.Text = "Цель: " .. plr.Name
+				targetLabel.TextColor3 = Color3.fromRGB(85, 255, 127)
+			end)
+		end
+	end
+	
+	playerListFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
+end
+
+-- Логика сворачивания меню
+minimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	if isMinimized then
+		minimizeBtn.Text = "+"
+		TweenService:Create(adminFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 300, 0, 45)}):Play()
+		playerListFrame.Visible = false
+		targetLabel.Visible = false
+	else
+		minimizeBtn.Text = "-"
+		TweenService:Create(adminFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 300, 0, 350)}):Play()
+		playerListFrame.Visible = true
+		targetLabel.Visible = true
+	end
+end)
+
+-- Кнопка 1: Обновить список игроков
+local selectBtn = Instance.new("TextButton")
+selectBtn.Size = UDim2.new(1, -20, 0, 35)
+selectBtn.Position = UDim2.new(0, 10, 0, 235)
+selectBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+selectBtn.Text = "1. Обновить список игроков"
+selectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+selectBtn.Font = Enum.Font.GothamBold
+selectBtn.TextSize = 13
+selectBtn.Parent = adminFrame
+local bCorner1 = Instance.new("UICorner")
+bCorner1.CornerRadius = UDim.new(0, 8)
+bCorner1.Parent = selectBtn
+
+selectBtn.MouseButton1Click:Connect(updatePlayerList)
+
+-- Кнопка 2: ТП к себе (Сзади-слева с поворотом на вас)
+local tpBtn = Instance.new("TextButton")
+tpBtn.Size = UDim2.new(0, 132, 0, 35)
+tpBtn.Position = UDim2.new(0, 10, 0, 280)
+tpBtn.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
+tpBtn.Text = "2. ТП к себе"
+tpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpBtn.Font = Enum.Font.GothamBold
+tpBtn.TextSize = 13
+tpBtn.Parent = adminFrame
+local bCorner2 = Instance.new("UICorner")
+bCorner2.CornerRadius = UDim.new(0, 8)
+bCorner2.Parent = tpBtn
+
+tpBtn.MouseButton1Click:Connect(function()
+	if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		local myChar = LocalPlayer.Character
+		if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+			local myCFrame = myChar.HumanoidRootPart.CFrame
+			
+			-- Считаем позицию: сзади (-LookVector * 3) и слева (-RightVector * 2)
+			local targetPos = myCFrame * CFrame.new(-2, 0, 3)
+			
+			-- Делаем так, чтобы игрок смотрел ровно на вас (в сторону вашего персонажа)
+			local finalCFrame = CFrame.new(targetPos.Position, myCFrame.Position)
+			
+			selectedPlayer.Character.HumanoidRootPart.CFrame = finalCFrame
+		end
+	end
+end)
+
+-- Кнопка 3: Кик с текстом
+local kickBtn = Instance.new("TextButton")
+kickBtn.Size = UDim2.new(0, 132, 0, 35)
+kickBtn.Position = UDim2.new(1, -142, 0, 280)
+kickBtn.BackgroundColor3 = Color3.fromRGB(178, 34, 34)
+kickBtn.Text = "Бан (Кик)"
+kickBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+kickBtn.Font = Enum.Font.GothamBold
+kickBtn.TextSize = 13
+kickBtn.Parent = adminFrame
+local bCorner3 = Instance.new("UICorner")
+bCorner3.CornerRadius = UDim.new(0, 8)
+bCorner3.Parent = kickBtn
+
+kickBtn.MouseButton1Click:Connect(function()
+	if selectedPlayer then
+		selectedPlayer:Kick("Видео снято спасибо за участие (Это не бан !)")
+		targetLabel.Text = "Цель: Не выбран"
+		targetLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		selectedPlayer = nil
+		task.wait(0.5)
+		updatePlayerList()
+	end
+end)
+
+-- Инициализация
+updatePlayerList()
+animateIn(adminFrame)
