@@ -2,7 +2,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
-local ADMIN_NAME = "Houav4" -- Ваш ник
+local ADMIN_NAME = "Houav4" -- Твой ник
 
 -- Создаем ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -22,8 +22,8 @@ local function animateIn(frame)
 	tween:Play()
 end
 
--- РЕЖИМ ОБЫЧНОГО ИГРОКА
-if LocalPlayer.Name ~= ADMIN_NAME then
+-- ПРОВЕРКА: Если твой ник НЕ Houav4 (без учета регистра на всякий случай), то показываем плашку ожидания
+if LocalPlayer.Name:lower() ~= ADMIN_NAME:lower() then
 	local userFrame = Instance.new("Frame")
 	userFrame.Size = UDim2.new(0, 320, 0, 120)
 	userFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
@@ -50,10 +50,12 @@ if LocalPlayer.Name ~= ADMIN_NAME then
 	label.Parent = userFrame
 	
 	animateIn(userFrame)
-	return
+	return -- Выходим, чтобы обычным игрокам не создавалось админ-меню
 end
 
--- РЕЖИМ СОЗДАТЕЛЯ / МОДЕРАТОРА (Houav4)
+--------------------------------------------------------------------------------
+-- РЕЖИМ СОЗДАТЕЛЯ (Для тебя - Houav4): Открывается Панель Ведущего
+--------------------------------------------------------------------------------
 local selectedPlayer = nil
 local isMinimized = false
 
@@ -71,7 +73,7 @@ corner.Parent = adminFrame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 45)
 title.BackgroundTransparency = 1
-title.Text = "Панель Ведущего"
+title.Text = "Панель Создателя"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 20
 title.Font = Enum.Font.GothamBold
@@ -208,7 +210,7 @@ tpBtn.MouseButton1Click:Connect(function()
 			-- Считаем позицию: сзади (-LookVector * 3) и слева (-RightVector * 2)
 			local targetPos = myCFrame * CFrame.new(-2, 0, 3)
 			
-			-- Делаем так, чтобы игрок смотрел ровно на вас (в сторону вашего персонажа)
+			-- Делаем так, чтобы игрок смотрел ровно на вас
 			local finalCFrame = CFrame.new(targetPos.Position, myCFrame.Position)
 			
 			selectedPlayer.Character.HumanoidRootPart.CFrame = finalCFrame
